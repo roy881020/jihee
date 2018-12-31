@@ -52,6 +52,15 @@ class ResNet(nn.Module):
         self.bn1 = nn.BatchNorm2d(64)
         self.relu = nn.ReLU(inplace=True)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1, ceil_mode=True)
+        #self.layer1 = call pretrainedmodels
+        self.layer2 = self._make_layer(block, 512, layers[1], stride=2)
+        self.layer3 = self._make_layer(block, 512, layers[2], stride=2) #have to modify inplane size
+        self.layer4 = self._make_layer(block, 512, layers[3], stride=2) #modify inplane
+        self.layer5 = self._make_layer(block, 512, layers[3], stride=1) #modify inplane
+        self.avgpool = nn.AvgPool2d(kernel_size=4, stride=2, padding=1, ceil_mode=True) #check function name exact
+        #self.layer6 = call classifier layer (FCN)
+
+
 
     def _make_layer(self,block,planes,blocks,stride=1,dilation__=1):
         donwsample = None
@@ -60,6 +69,17 @@ class ResNet(nn.Module):
                 nn.Conv2d(self.inplanes, planes * block.expansion, kernel_size=1, stride=stride, bias=False),
                 nn.BatchNorm2d(planes * block.expansion),
             )
+    def forward(self, x):
+        x = self.layer1(x)
+        x = self.layer2(x)
+        x = self.layer3(x)
+        x = self.layer4(x)
+        x = self.layer5(x)
+        x = self.avgpool(x)
+        x = self.layer6(x)
+
+        return x
+
 
 #for use pre-trained model(VGG16)
 model_name = 'VGG16'
