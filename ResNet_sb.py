@@ -59,7 +59,7 @@ class ResNet(nn.Module):
         self.layer4 = self._make_layer(block, 512, layers[3], stride=2) #modify inplane
         self.layer5 = self._make_layer(block, 512, layers[3], stride=1) #modify inplane
         self.avgpool = nn.AvgPool2d(kernel_size=4, stride=2, padding=1, ceil_mode=True) #check function name exact
-        #self.layer6 = call classifier layer (FCN)
+        self.layer6 = self._make_pred_layer(Classifier_Module, diliation_series=1,padding_series=1)
 
 
 
@@ -80,7 +80,8 @@ class ResNet(nn.Module):
 
         return nn.Sequential(*layers)
     def _make_pred_layer(self, block, diliation_series, padding_series):
-        
+        return block(diliation_series, padding_series)
+
     def forward(self, x):
         x = self.layer1(x)
         x = self.layer2(x)
@@ -91,6 +92,11 @@ class ResNet(nn.Module):
         x = self.layer6(x)
 
         return x
+
+class Classifier_Module(nn.Module):
+
+    def __init__(self, diliation_series, padding_seires):
+        super(Classifier_Module, self).__init__()
 
 
 #for use pre-trained model(VGG16)
