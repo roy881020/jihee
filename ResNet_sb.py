@@ -14,6 +14,7 @@ LEARNING_RATE = 0.001
 
 
 class ResBlock(nn.Module):
+    expansion = 1
     def __init__(self, inplanes, planes, stride=1, downsample=None):
         super(ResBlock, self).__init__()
         self.conv1 = nn.Conv2d(inplanes, planes, kernel_size=3, stride=1, padding=1)
@@ -69,6 +70,17 @@ class ResNet(nn.Module):
                 nn.Conv2d(self.inplanes, planes * block.expansion, kernel_size=1, stride=stride, bias=False),
                 nn.BatchNorm2d(planes * block.expansion),
             )
+        for i in downsample._modules['1'].parameters():
+            i.requires_grad = False
+        layers = []
+        layers.append(block(self.inplanes, planes, stride, dilation__=dilation__, downsample=downsample))
+        self.inplanes = planes * block.expansion
+        for i in range(1,blocks):
+            layers.append(block(self.inplanes, planes, dilation__=dilation__))
+
+        return nn.Sequential(*layers)
+    def _make_pred_layer(self, block, diliation_series, padding_series):
+        
     def forward(self, x):
         x = self.layer1(x)
         x = self.layer2(x)
@@ -82,5 +94,8 @@ class ResNet(nn.Module):
 
 
 #for use pre-trained model(VGG16)
-model_name = 'VGG16'
+model_name = 'vgg16'
 model = pretrainedmodels.__dict__[model_name](num_classes=1000, pretrained='imagenet')
+
+def ResNet_sb():
+    model = ResNet(ResBlock,)
