@@ -181,6 +181,7 @@ def train_model(model, criterion, optimizer, lr_scheduler, num_epochs=100):
                 optimizer.zero_grad()
                 # pdb.set_trace()
                 outputs = model(inputs)
+                # pdb.set_trace()
                 _, preds = torch.max(outputs.data, 1)
 
                 loss = criterion(outputs, labels)
@@ -244,16 +245,44 @@ def exp_lr_scheduler(optimizer, epoch, init_lr=BASE_LR, lr_decay_epoch=EPOCH_DEC
     return optimizer
 
 
+class ResModule(nn.Module):
+    def __init__(self):
+        super(ResModule, self).__init__()
+        # self.pretrained = nn.Sequential(*list((models.resnet50(pretrained=True)).children())[:-2])
+        self.pretrained = nn.Sequential(*list((models.resnet50(pretrained=True)).children())[:-1],
+                                        # nn.MaxPool2d(kernel_size=7,stride=1, padding=0),
+                                        # nn.Linear(2048,1000,bias=True),
+                                        )
+        # self.pretrained = models.resnet50(pretrained=True)
+        # self.out = nn.Linear(1000,2)
+        self.deconv = nn.ConvTranspose2d(2048, 1000, kernel_size=3, stride=1, padding=1)
+        self.conv = nn.Conv2d(1000, 2, kernel_size=1)
+
+    def forward(self, x):
+        x = self.pretrained(x)
+        # x = self.maxpool(x)
+        # x = self.fc(x)
+        x = self.deconv(x)
+        x = self.conv(x)
+        x = x.squeeze(3).squeeze(2)
+        return x
+
+
 ### SECTION 4 : DEFINING MODEL ARCHITECTURE.
 
 # We use Resnet18 here. If you have more computational power, feel free to swap it with Resnet50, Resnet100 or Resnet152.
 # Since we are doing fine-tuning, or transfer learning we will use the pretrained net weights. In the last line, the number of classes has been specified.
 # Set the number of classes in the config file by setting the right value for NUM_CLASSES.
 
-model_ft = models.resnet50(pretrained=True)
-num_ftrs = model_ft.fc.in_features
+
+model_ft = ResModule()
+model_ft2 = models.resnet50(pretrained=True)
+# pdb.set_trace()
+
+##model_ft = models.resnet50(pretrained=True)
+##num_ftrs = model_ft.fc.in_features
 # model_ft = nn.Sequential(*list(model_ft.children())[:-2])
-model_ft.fc = nn.Linear(num_ftrs, NUM_CLASSES)
+##model_ft.fc = nn.Conv2d(num_ftrs, NUM_CLASSES, kernel_size=1)
 # model_ft.fc = nn.Conv2d(num_ftrs, NUM_CLASSES, kernel_size=1,bias=True)
 # pdb.set_trace()
 
