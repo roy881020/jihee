@@ -58,14 +58,14 @@ count = 0
 # If you want to read more, transforms is a function from torchvision, and you can go read more here - http://pytorch.org/docs/master/torchvision/transforms.html
 data_transforms = {
     'train': transforms.Compose([
-        transforms.RandomResizedCrop(224),
-        transforms.RandomHorizontalFlip(),
+        transforms.Resize(448),
+        # transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
     ]),
     'val': transforms.Compose([
-        transforms.Resize(224),
-        transforms.CenterCrop(224),
+        transforms.Resize(448),
+        # transforms.CenterCrop(224),
         transforms.ToTensor(),
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
     ]),
@@ -255,6 +255,7 @@ class ResModule(nn.Module):
                                         )
         # self.pretrained = models.resnet50(pretrained=True)
         # self.out = nn.Linear(1000,2)
+        self.maxpool = nn.MaxPool2d(kernel_size=8, stride=1, padding=0)
         self.deconv = nn.ConvTranspose2d(2048, 1000, kernel_size=3, stride=1, padding=1)
         self.conv = nn.Conv2d(1000, 2, kernel_size=1)
 
@@ -262,10 +263,12 @@ class ResModule(nn.Module):
         x = self.pretrained(x)
         # x = self.maxpool(x)
         # x = self.fc(x)
-        x = self.deconv(x)
-        x = self.conv(x)
-        x = x.squeeze(3).squeeze(2)
-        return x
+        x = self.maxpool(x)
+        x1 = self.deconv(x)
+        x2 = self.conv(x1)
+        x3 = x2.squeeze(3).squeeze(2)
+        # pdb.set_trace()
+        return x3
 
 
 ### SECTION 4 : DEFINING MODEL ARCHITECTURE.
